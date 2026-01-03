@@ -1,0 +1,43 @@
+{
+  "name": "vidhanto-legal-platform",
+  "version": "1.0.0",
+  "description": "Indian Legal-Tech Platform with AI Assistant and Lawyer Consultations",
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../admin-panel && npm install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:admin\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:admin": "cd admin-panel && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend && npm run build:admin",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "build:admin": "cd admin-panel && npm run build",
+    "start": "npm run start:backend",
+    "start:backend": "cd backend && npm start",
+    "setup": "npm run install:all && npm run copy:env",
+    "copy:env": "cd backend && copy .env.example .env",
+    "lint": "npm run lint:backend && npm run lint:frontend && npm run lint:admin",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:admin": "cd admin-panel && npm run lint"
+  },
+  "keywords": [
+    "legal-tech",
+    "lawyer",
+    "ai",
+    "consultation",
+    "indian-law",
+    "mern",
+    "razorpay",
+    "gemini"
+  ],
+  "author": "Vidhanto Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}
