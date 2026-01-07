@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import apiService from '../services/api';
+import { dashboardAPI, appointmentsAPI, documentsAPI, utils } from '../services/api';
 import {
   Users,
   FileText,
@@ -42,15 +42,15 @@ const Dashboard = () => {
 
         // Fetch all dashboard data in parallel
         const [appointmentsRes, documentsRes, statsRes] = await Promise.all([
-          apiService.getAppointments(),
-          apiService.getDocuments(),
-          apiService.getDashboardStats()
+          dashboardAPI.getRecentAppointments(5),
+          dashboardAPI.getRecentDocuments(5),
+          dashboardAPI.getStats()
         ]);
 
         setDashboardData({
-          appointments: appointmentsRes.appointments || [],
-          documents: documentsRes.documents || [],
-          stats: statsRes.stats || {
+          appointments: appointmentsRes.data?.appointments || [],
+          documents: documentsRes.data?.documents || [],
+          stats: statsRes.data?.stats || {
             totalAppointments: 0,
             totalDocuments: 0,
             totalChats: 0,
@@ -153,9 +153,9 @@ const Dashboard = () => {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">12</div>
+              <div className="text-2xl font-bold">{dashboardData.stats.totalAppointments}</div>
               <p className="text-xs text-muted-foreground">
-                +2 from last month
+                Total appointments
               </p>
             </CardContent>
           </Card>
@@ -166,9 +166,9 @@ const Dashboard = () => {
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">8</div>
+              <div className="text-2xl font-bold">{dashboardData.stats.totalDocuments}</div>
               <p className="text-xs text-muted-foreground">
-                +3 from last month
+                Total documents
               </p>
             </CardContent>
           </Card>
@@ -179,9 +179,9 @@ const Dashboard = () => {
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">24</div>
+              <div className="text-2xl font-bold">{dashboardData.stats.totalChats}</div>
               <p className="text-xs text-muted-foreground">
-                +7 from last month
+                Total AI chats
               </p>
             </CardContent>
           </Card>
@@ -192,9 +192,9 @@ const Dashboard = () => {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">156</div>
+              <div className="text-2xl font-bold">{dashboardData.stats.activeLawyers}</div>
               <p className="text-xs text-muted-foreground">
-                +12 from last month
+                Total active lawyers
               </p>
             </CardContent>
           </Card>
@@ -243,29 +243,27 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Consultation with Adv. Sharma</p>
-                    <p className="text-xs text-gray-500">2 hours ago</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Document Review</p>
-                    <p className="text-xs text-gray-500">Yesterday</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Legal Consultation</p>
-                    <p className="text-xs text-gray-500">3 days ago</p>
-                  </div>
-                </div>
+                {dashboardData.appointments.length > 0 ? (
+                  dashboardData.appointments.slice(0, 3).map((appointment, index) => (
+                    <div key={appointment._id} className="flex items-center space-x-3">
+                      <div className={`w-2 h-2 rounded-full ${appointment.status === 'completed' ? 'bg-green-500' :
+                        appointment.status === 'scheduled' ? 'bg-blue-500' :
+                          appointment.status === 'cancelled' ? 'bg-red-500' :
+                            'bg-yellow-500'
+                        }`}></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">
+                          {appointment.lawyerId?.name ? `Consultation with ${appointment.lawyerId.name}` : 'Appointment'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(appointment.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">No appointments yet</p>
+                )}
               </div>
 
               <Button asChild variant="outline" className="w-full mt-4">
@@ -281,29 +279,25 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">Rental Agreement.pdf</p>
-                    <p className="text-xs text-gray-500">Created 2 days ago</p>
-                  </div>
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">Legal Notice.docx</p>
-                    <p className="text-xs text-gray-500">Created 5 days ago</p>
-                  </div>
-                  <Clock className="h-4 w-4 text-yellow-500" />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">Power of Attorney.pdf</p>
-                    <p className="text-xs text-gray-500">Created 1 week ago</p>
-                  </div>
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                </div>
+                {dashboardData.documents.length > 0 ? (
+                  dashboardData.documents.slice(0, 3).map((document) => (
+                    <div key={document._id} className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">{document.title || document.fileName}</p>
+                        <p className="text-xs text-gray-500">
+                          Created {new Date(document.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      {document.status === 'completed' ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Clock className="h-4 w-4 text-yellow-500" />
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">No documents yet</p>
+                )}
               </div>
 
               <Button asChild variant="outline" className="w-full mt-4">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import api from '../services/api';
+import { esignatureAPI, utils } from '../services/api';
 import { toast } from 'react-hot-toast';
 import {
   FileText, Users, Send, Download, CheckCircle, Clock,
@@ -23,12 +23,12 @@ const ESignature = () => {
   const fetchESignatures = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/esignature/my-requests');
-      if (response.data.success) {
-        setESignatures(response.data.data.eSignatures);
+      const response = await esignatureAPI.getMyRequests();
+      if (response.success) {
+        setESignatures(response.data.eSignatures);
       }
     } catch (error) {
-      toast.error('Failed to fetch e-signature requests');
+      utils.handleError(error, 'Failed to fetch e-signature requests');
     } finally {
       setLoading(false);
     }

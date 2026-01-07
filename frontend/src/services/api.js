@@ -158,6 +158,24 @@ export const usersAPI = {
   }
 };
 
+// Dashboard API
+export const dashboardAPI = {
+  getStats: async () => {
+    const response = await api.get('/users/dashboard/stats');
+    return response.data;
+  },
+  
+  getRecentAppointments: async (limit = 5) => {
+    const response = await api.get(`/appointments?limit=${limit}&sort=-createdAt`);
+    return response.data;
+  },
+  
+  getRecentDocuments: async (limit = 5) => {
+    const response = await api.get(`/documents?limit=${limit}&sort=-createdAt`);
+    return response.data;
+  }
+};
+
 // Lawyers API
 export const lawyersAPI = {
   getLawyers: async (params = {}) => {

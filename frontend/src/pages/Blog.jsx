@@ -5,6 +5,7 @@ import {
   ChevronRight, ArrowLeft, ArrowRight, Eye, Tag
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { blogsAPI, utils } from '../services/api';
 
 const Blog = () => {
   const [blogs, setBlogs] = useState([]);
@@ -22,24 +23,22 @@ const Blog = () => {
   const loadBlogs = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
+      
+      const response = await blogsAPI.getBlogs({
         page: currentPage,
         limit: 9,
         category: selectedCategory,
         search: searchTerm
       });
 
-      const response = await fetch(`/api/blogs?${params}`);
-      const data = await response.json();
-
-      if (data.success) {
-        setBlogs(data.data.blogs);
-        setCategories(data.data.categories);
-        setTotalPages(data.data.pagination.pages);
+      if (response.success) {
+        setBlogs(response.data.blogs);
+        setCategories(response.data.categories);
+        setTotalPages(response.data.pagination.pages);
       }
     } catch (error) {
       console.error('Failed to load blogs:', error);
-      toast.error('Failed to load blogs');
+      utils.handleError(error, 'Failed to load blogs');
     } finally {
       setLoading(false);
     }
