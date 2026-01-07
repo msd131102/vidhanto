@@ -28,13 +28,13 @@ import EStamp from './pages/EStamp';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('accessToken');
   return token ? children : <Navigate to="/login" />;
 };
 
 // Public Route component (redirect if authenticated)
 const PublicRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('accessToken');
   return !token ? children : <Navigate to="/dashboard" />;
 };
 

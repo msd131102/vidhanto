@@ -11,7 +11,7 @@ class EmailService {
     try {
       // Create transporter based on environment
       if (process.env.EMAIL_SERVICE === 'gmail') {
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
             user: process.env.EMAIL_USER,
@@ -20,7 +20,7 @@ class EmailService {
         });
       } else {
         // Use custom SMTP configuration
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
           host: process.env.EMAIL_HOST,
           port: process.env.EMAIL_PORT,
           secure: process.env.EMAIL_PORT === '465', // true for 465, false for other ports

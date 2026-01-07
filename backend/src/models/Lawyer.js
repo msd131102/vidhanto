@@ -179,6 +179,10 @@ const lawyerSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
   socialLinks: {
     linkedin: String,
     website: String,

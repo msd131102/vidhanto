@@ -6,6 +6,7 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Lawyer = require('../models/Lawyer');
 const { authenticate } = require('../middleware/auth');
+const emailService = require('../services/emailService');
 const router = express.Router();
 
 // Generate JWT tokens
@@ -54,12 +55,13 @@ router.post('/register', [
   body('lastName').trim().isLength({ min: 2, max: 50 }).withMessage('Last name must be 2-50 characters'),
   body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('phone').matches(/^[0-9]{10}$/).withMessage('Please provide a valid 10-digit phone number'),
+  body('phone').matches(/^[\+0-9\s\-\(\)]{10,15}$/).withMessage('Please provide a valid phone number'),
   body('role').optional().isIn(['user', 'lawyer']).withMessage('Invalid role')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({
         success: false,
         message: 'Validation errors',
@@ -68,6 +70,7 @@ router.post('/register', [
     }
 
     const { firstName, lastName, email, password, phone, role = 'user' } = req.body;
+    console.log('Registration data:', { firstName, lastName, email, phone, role });
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -81,12 +84,15 @@ router.post('/register', [
       });
     }
 
+    // Hash password before creating user
+    const hashedPassword = await bcrypt.hash(password, 12);
+    
     // Create new user
     const user = new User({
       firstName,
       lastName,
       email,
-      password,
+      password: hashedPassword,
       phone,
       role,
       emailVerificationToken: crypto.randomBytes(32).toString('hex')
@@ -126,16 +132,15 @@ router.post('/register', [
       success: true,
       message: 'User registered successfully. Please verify your email.',
       data: {
-        user: {
-          id: user._id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          phone: user.phone,
-          role: user.role,
-          isEmailVerified: user.isEmailVerified
-        },
-        tokens: { accessToken, refreshToken }
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified,
+        accessToken,
+        refreshToken
       }
     });
   } catch (error) {
@@ -154,8 +159,11 @@ router.post('/login', [
   body('password').notEmpty().withMessage('Password is required')
 ], async (req, res) => {
   try {
+    console.log('Login attempt - Request body:', { email: req.body.email, password: '***' });
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Login validation errors:', errors.array());
       return res.status(400).json({
         success: false,
         message: 'Validation errors',
@@ -164,18 +172,30 @@ router.post('/login', [
     }
 
     const { email, password } = req.body;
+    console.log('Login attempt - Looking for user with email:', email);
 
     // Find user by email
     const user = await User.findOne({ email }).select('+password');
+    console.log('Login attempt - User found:', user ? 'YES' : 'NO');
+    
     if (!user) {
+      console.log('Login attempt - User not found in database');
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
 
+    console.log('Login attempt - User data:', {
+      id: user._id,
+      email: user.email,
+      isActive: user.isActive,
+      hasPassword: !!user.password
+    });
+
     // Check if user is active
     if (!user.isActive) {
+      console.log('Login attempt - User is deactivated');
       return res.status(401).json({
         success: false,
         message: 'Account is deactivated'
@@ -183,8 +203,12 @@ router.post('/login', [
     }
 
     // Check password
+    console.log('Login attempt - Comparing password...');
     const isPasswordValid = await user.comparePassword(password);
+    console.log('Login attempt - Password valid:', isPasswordValid ? 'YES' : 'NO');
+    
     if (!isPasswordValid) {
+      console.log('Login attempt - Invalid password');
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -196,23 +220,27 @@ router.post('/login', [
     await user.save();
 
     const { accessToken, refreshToken } = generateTokens(user._id);
+    console.log('Login attempt - Tokens generated successfully');
+
+    const responseData = {
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      isEmailVerified: user.isEmailVerified,
+      profileImage: user.profileImage,
+      accessToken,
+      refreshToken
+    };
+    
+    console.log('Login attempt - Sending response:', { success: true, dataKeys: Object.keys(responseData) });
 
     res.json({
       success: true,
       message: 'Login successful',
-      data: {
-        user: {
-          id: user._id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          phone: user.phone,
-          role: user.role,
-          isEmailVerified: user.isEmailVerified,
-          profileImage: user.profileImage
-        },
-        tokens: { accessToken, refreshToken }
-      }
+      data: responseData
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -252,7 +280,15 @@ router.post('/refresh', async (req, res) => {
       success: true,
       message: 'Token refreshed successfully',
       data: {
-        tokens: { accessToken, refreshToken: newRefreshToken }
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified,
+        accessToken,
+        refreshToken: newRefreshToken
       }
     });
   } catch (error) {

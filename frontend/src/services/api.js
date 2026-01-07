@@ -48,7 +48,7 @@ api.interceptors.response.use(
           refreshToken,
         });
         
-        const { accessToken, refreshToken: newRefreshToken } = response.data.data.tokens;
+        const { accessToken, refreshToken: newRefreshToken } = response.data.data;
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', newRefreshToken);
         
@@ -103,12 +103,11 @@ export const authAPI = {
     
     // Store tokens and user data
     if (response.data.success) {
-      const { accessToken, refreshToken } = response.data.data.tokens;
-      const user = response.data.data.user;
+      const { accessToken, refreshToken, ...userData } = response.data.data;
       
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(userData));
     }
     
     return response.data;
@@ -166,12 +165,12 @@ export const dashboardAPI = {
   },
   
   getRecentAppointments: async (limit = 5) => {
-    const response = await api.get(`/appointments?limit=${limit}&sort=-createdAt`);
+    const response = await api.get(`/users/dashboard/recent-appointments?limit=${limit}`);
     return response.data;
   },
   
   getRecentDocuments: async (limit = 5) => {
-    const response = await api.get(`/documents?limit=${limit}&sort=-createdAt`);
+    const response = await api.get(`/users/dashboard/recent-documents?limit=${limit}`);
     return response.data;
   }
 };
@@ -303,6 +302,84 @@ export const documentsAPI = {
   
   signDocument: async (id, signatureData) => {
     const response = await api.post(`/documents/${id}/sign`, signatureData);
+    return response.data;
+  }
+};
+
+// E-Signature API
+export const esignatureAPI = {
+  getMyRequests: async () => {
+    const response = await api.get('/esignature/my-requests');
+    return response.data;
+  },
+  
+  createRequest: async (requestData) => {
+    const response = await api.post('/esignature/create', requestData);
+    return response.data;
+  },
+  
+  getRequest: async (id) => {
+    const response = await api.get(`/esignature/${id}`);
+    return response.data;
+  },
+  
+  updateRequest: async (id, data) => {
+    const response = await api.put(`/esignature/${id}`, data);
+    return response.data;
+  },
+  
+  deleteRequest: async (id) => {
+    const response = await api.delete(`/esignature/${id}`);
+    return response.data;
+  },
+  
+  signRequest: async (id, signatureData) => {
+    const response = await api.post(`/esignature/${id}/sign`, signatureData);
+    return response.data;
+  },
+  
+  getToSign: async () => {
+    const response = await api.get('/esignature/to-sign');
+    return response.data;
+  }
+};
+
+// E-Stamp API
+export const estampAPI = {
+  getMyRequests: async () => {
+    const response = await api.get('/estamp/my-requests');
+    return response.data;
+  },
+  
+  createRequest: async (requestData) => {
+    const response = await api.post('/estamp/create', requestData);
+    return response.data;
+  },
+  
+  getRequest: async (id) => {
+    const response = await api.get(`/estamp/${id}`);
+    return response.data;
+  },
+  
+  updateRequest: async (id, data) => {
+    const response = await api.put(`/estamp/${id}`, data);
+    return response.data;
+  },
+  
+  deleteRequest: async (id) => {
+    const response = await api.delete(`/estamp/${id}`);
+    return response.data;
+  },
+  
+  verifyStamp: async (id, verificationData) => {
+    const response = await api.post(`/estamp/${id}/verify`, verificationData);
+    return response.data;
+  },
+  
+  downloadCertificate: async (id) => {
+    const response = await api.get(`/estamp/${id}/download`, {
+      responseType: 'blob'
+    });
     return response.data;
   }
 };

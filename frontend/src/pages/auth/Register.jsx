@@ -11,6 +11,7 @@ import {
   AlertCircle,
   Loader
 } from 'lucide-react';
+import { Input } from '../../components/ui/input';
 
 const Register = () => {
   const { register, loading, error, clearError } = useAuth();
@@ -91,11 +92,14 @@ const Register = () => {
     if (!validateForm()) return;
 
     try {
+      // Clean phone number - remove spaces, dashes, parentheses
+      const cleanPhone = formData.phone.replace(/[\s\-\(\)]/g, '');
+      
       const userData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
-        phone: formData.phone,
+        phone: cleanPhone,
         password: formData.password,
         role: formData.userType
       };
@@ -107,10 +111,6 @@ const Register = () => {
     }
   };
 
-  // Clear any existing auth errors when component mounts
-  useEffect(() => {
-    clearError();
-  }, [clearError]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

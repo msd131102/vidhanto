@@ -269,10 +269,14 @@ router.delete('/account', authenticate, async (req, res) => {
 // Get user dashboard stats
 router.get('/dashboard/stats', authenticate, async (req, res) => {
   try {
+    const Appointment = require('../models/Appointment');
+    const Document = require('../models/Document');
+    const Chat = require('../models/Chat');
+    
     const [appointmentsCount, documentsCount, chatsCount] = await Promise.all([
-      Appointment.countDocuments({ userId: req.user.id }),
-      Document.countDocuments({ userId: req.user.id }),
-      Chat.countDocuments({ userId: req.user.id })
+      Appointment.countDocuments({ userId: req.user._id }),
+      Document.countDocuments({ userId: req.user._id }),
+      Chat.countDocuments({ userId: req.user._id })
     ]);
 
     // Get active lawyers count
@@ -281,15 +285,69 @@ router.get('/dashboard/stats', authenticate, async (req, res) => {
     });
 
     res.json({
-      stats: {
-        totalAppointments: appointmentsCount,
-        totalDocuments: documentsCount,
-        totalChats: chatsCount,
-        activeLawyers: activeLawyersCount
+      success: true,
+      data: {
+        stats: {
+          totalAppointments: appointmentsCount,
+          totalDocuments: documentsCount,
+          totalChats: chatsCount,
+          activeLawyers: activeLawyersCount
+        }
       }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching dashboard stats' });
+    console.error('Dashboard stats error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching dashboard stats' 
+    });
+  }
+});
+
+// Get recent appointments for dashboard
+router.get('/dashboard/recent-appointments', authenticate, async (req, res) => {
+  try {
+    const { limit = 5 } = req.query;
+    
+    const Appointment = require('../models/Appointment');
+    const appointments = await Appointment.find({ userId: req.user._id })
+      .populate('lawyerId', 'name barLicenseNumber specialization')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit));
+
+    res.json({
+      success: true,
+      data: { appointments }
+    });
+  } catch (error) {
+    console.error('Recent appointments error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching recent appointments' 
+    });
+  }
+});
+
+// Get recent documents for dashboard
+router.get('/dashboard/recent-documents', authenticate, async (req, res) => {
+  try {
+    const { limit = 5 } = req.query;
+    
+    const Document = require('../models/Document');
+    const documents = await Document.find({ userId: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit));
+
+    res.json({
+      success: true,
+      data: { documents }
+    });
+  } catch (error) {
+    console.error('Recent documents error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching recent documents' 
+    });
   }
 });
 
