@@ -221,7 +221,6 @@ const lawyerSchema = new mongoose.Schema({
 });
 
 // Index for better search performance
-lawyerSchema.index({ userId: 1 });
 lawyerSchema.index({ specialization: 1 });
 lawyerSchema.index({ location: 1 });
 lawyerSchema.index({ 'rating.average': -1 });
