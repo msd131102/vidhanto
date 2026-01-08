@@ -50,11 +50,21 @@ const LawyerDashboard = () => {
 
       try {
         const currentUser = utils.getCurrentUser();
-        const lawyerId = currentUser?.id;
+        const userId = currentUser?.id;
 
-        if (!lawyerId) {
+        if (!userId) {
+          throw new Error('User not found');
+        }
+
+        // First get the lawyer profile by userId
+        const lawyersListRes = await lawyersAPI.getLawyers({ userId: userId });
+        const lawyerProfile = lawyersListRes?.data?.lawyers?.[0];
+        
+        if (!lawyerProfile) {
           throw new Error('Lawyer profile not found');
         }
+
+        const lawyerId = lawyerProfile._id;
 
         const [appointmentsRes, statsRes, lawyerRes] = await Promise.all([
           lawyersAPI.getLawyerAppointments(lawyerId, { limit: 5 }).catch(() => ({ data: {} })),
@@ -87,7 +97,11 @@ const LawyerDashboard = () => {
 
       } catch (err) {
         console.error('Dashboard error:', err);
-        setError('Failed to load dashboard data');
+        if (err.message === 'Lawyer profile not found') {
+          setError('Please complete your lawyer profile to access the dashboard. You can create your profile in the Profile section.');
+        } else {
+          setError('Failed to load dashboard data');
+        }
       } finally {
         setLoading(false);
       }
@@ -128,9 +142,21 @@ const LawyerDashboard = () => {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
+        <div className="text-center max-w-md mx-auto p-6">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-gray-600">{error}</p>
+          <p className="text-gray-600 mb-4">{error}</p>
+          {error.includes('complete your lawyer profile') && (
+            <div className="text-left">
+              <p className="text-sm text-gray-600 mb-4">
+                To access your lawyer dashboard, you need to complete your lawyer profile first.
+              </p>
+              <Link to="/profile">
+                <Button className="w-full">
+                  Complete Lawyer Profile
+                </Button>
+              </Link>
+            </div>
+          )}
           <Button className="mt-4" onClick={() => window.location.reload()}>
             Retry
           </Button>

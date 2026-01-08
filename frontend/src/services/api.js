@@ -201,24 +201,24 @@ export const dashboardAPI = {
   },
 
   // Lawyer-specific dashboard APIs
-  getLawyerStats: async () => {
-    const response = await api.get('/lawyers/dashboard/stats');
+  getLawyerStats: async (id) => {
+    const response = await api.get(`/lawyers/${id}/stats`);
     return response.data;
   },
 
-  getLawyerAppointments: async (limit = 5) => {
-    const response = await api.get(`/lawyers/dashboard/appointments?limit=${limit}`);
+  getLawyerAppointments: async (id, limit = 5) => {
+    const response = await api.get(`/lawyers/${id}/appointments?limit=${limit}`);
     return response.data;
   },
 
-  getLawyerProfile: async () => {
-    const response = await api.get('/lawyers/dashboard/profile');
+  getLawyerProfile: async (id) => {
+    const response = await api.get(`/lawyers/${id}`);
     return response.data;
   },
 
   getRecentClients: async (limit = 3) => {
-    const response = await api.get(`/lawyers/dashboard/recent-clients?limit=${limit}`);
-    return response.data;
+    // This endpoint doesn't exist yet, return empty data for now
+    return { data: { clients: [] } };
   }
 };
 

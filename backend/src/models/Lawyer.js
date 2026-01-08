@@ -88,11 +88,13 @@ const lawyerSchema = new mongoose.Schema({
   location: {
     city: {
       type: String,
-      required: true
+      default: '',
+      required: false
     },
     state: {
       type: String,
-      required: true,
+      default: '',
+      required: false,
       enum: [
         'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
         'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',

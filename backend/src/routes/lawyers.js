@@ -120,6 +120,10 @@ router.get('/', async (req, res) => {
     let filter = { isVerified: true, isActive: true };
 
     // Build filter conditions
+    if (userId) {
+      filter.userId = userId;
+    }
+
     if (specialization) {
       filter.specialization = { $in: specialization.split(',') };
     }
