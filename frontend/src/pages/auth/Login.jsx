@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react';
@@ -63,7 +63,7 @@ const Login = () => {
   };
 
   // Clear any existing auth errors when component mounts
-  useState(() => {
+  useEffect(() => {
     clearError();
   }, [clearError]);
 

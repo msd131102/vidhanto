@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardBody, 
@@ -23,98 +23,99 @@ import {
   ShieldCheckIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
+import { dashboardAPI, utils } from '../services/api';
 
 const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('7d');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [systemHealth, setSystemHealth] = useState({});
 
-  const stats = [
-    {
-      title: 'Total Users',
-      value: '12,543',
-      change: '+523',
-      changeType: 'increase',
-      icon: <UserGroupIcon className="w-6 h-6 text-blue-600" />,
-      color: 'blue'
-    },
-    {
-      title: 'Total Revenue',
-      value: '₹8,45,230',
-      change: '+12.5%',
-      changeType: 'increase',
-      icon: <CurrencyDollarIcon className="w-6 h-6 text-green-600" />,
-      color: 'green'
-    },
-    {
-      title: 'Active Lawyers',
-      value: '523',
-      change: '+45',
-      changeType: 'increase',
-      icon: <ShieldCheckIcon className="w-6 h-6 text-purple-600" />,
-      color: 'purple'
-    },
-    {
-      title: 'Total Documents',
-      value: '3,456',
-      change: '+234',
-      changeType: 'increase',
-      icon: <DocumentTextIcon className="w-6 h-6 text-orange-600" />,
-      color: 'orange'
-    },
-    {
-      title: 'Appointments Today',
-      value: '156',
-      change: '+12',
-      changeType: 'increase',
-      icon: <CalendarIcon className="w-6 h-6 text-red-600" />,
-      color: 'red'
-    },
-    {
-      title: 'AI Conversations',
-      value: '2,345',
-      change: '+189',
-      changeType: 'increase',
-      icon: <ChatBubbleLeftRightIcon className="w-6 h-6 text-indigo-600" />,
-      color: 'indigo'
-    }
-  ];
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!utils.isAuthenticated()) {
+        window.location.href = '/admin/login';
+        return;
+      }
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'user_registration',
-      description: 'New user registration: John Doe',
-      time: '2 minutes ago',
-      status: 'success'
-    },
-    {
-      id: 2,
-      type: 'payment_completed',
-      description: 'Payment received: ₹2,500 for consultation',
-      time: '5 minutes ago',
-      status: 'success'
-    },
-    {
-      id: 3,
-      type: 'lawyer_verification',
-      description: 'New lawyer verification request: Adv. Priya Sharma',
-      time: '10 minutes ago',
-      status: 'pending'
-    },
-    {
-      id: 4,
-      type: 'ai_usage',
-      description: 'High AI usage detected: 150+ tokens used',
-      time: '15 minutes ago',
-      status: 'warning'
-    },
-    {
-      id: 5,
-      type: 'document_created',
-      description: 'Document drafted: Rental Agreement',
-      time: '20 minutes ago',
-      status: 'success'
-    }
-  ];
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch all dashboard data in parallel
+        const [statsRes, activitiesRes, healthRes] = await Promise.all([
+          dashboardAPI.getStats(),
+          dashboardAPI.getRecentActivities(),
+          dashboardAPI.getSystemHealth()
+        ]);
+
+        // Transform stats data for display
+        const statsData = statsRes.data?.stats || {};
+        const transformedStats = [
+          {
+            title: 'Total Users',
+            value: statsData.totalUsers?.toLocaleString() || '0',
+            change: '+0',
+            changeType: 'increase',
+            icon: <UserGroupIcon className="w-6 h-6 text-blue-600" />,
+            color: 'blue'
+          },
+          {
+            title: 'Total Revenue',
+            value: `₹${(statsData.totalRevenue || 0).toLocaleString('en-IN')}`,
+            change: '+0%',
+            changeType: 'increase',
+            icon: <CurrencyDollarIcon className="w-6 h-6 text-green-600" />,
+            color: 'green'
+          },
+          {
+            title: 'Active Lawyers',
+            value: statsData.totalLawyers?.toLocaleString() || '0',
+            change: '+0',
+            changeType: 'increase',
+            icon: <ShieldCheckIcon className="w-6 h-6 text-purple-600" />,
+            color: 'purple'
+          },
+          {
+            title: 'Total Documents',
+            value: statsData.totalDocuments?.toLocaleString() || '0',
+            change: '+0',
+            changeType: 'increase',
+            icon: <DocumentTextIcon className="w-6 h-6 text-orange-600" />,
+            color: 'orange'
+          },
+          {
+            title: 'Appointments Today',
+            value: statsData.totalAppointments?.toLocaleString() || '0',
+            change: '+0',
+            changeType: 'increase',
+            icon: <CalendarIcon className="w-6 h-6 text-red-600" />,
+            color: 'red'
+          },
+          {
+            title: 'AI Conversations',
+            value: statsData.totalChats?.toLocaleString() || '0',
+            change: '+0',
+            changeType: 'increase',
+            icon: <ChatBubbleLeftRightIcon className="w-6 h-6 text-indigo-600" />,
+            color: 'indigo'
+          }
+        ];
+
+        setStats(transformedStats);
+        setRecentActivities(activitiesRes.data?.activities || []);
+        setSystemHealth(healthRes.data || {});
+      } catch (err) {
+        setError(err.message || 'Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   const quickActions = [
     {
@@ -159,6 +160,35 @@ const AdminDashboard = () => {
         return 'default';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent animate-spin"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <ExclamationTriangleIcon className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Dashboard</h2>
+          <p className="text-gray-600">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -276,47 +306,73 @@ const AdminDashboard = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">API Response Time</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-gray-900">124ms</span>
-                    <Chip size="sm" color="success" variant="flat">
-                      Healthy
+                    <span className="text-lg font-semibold text-gray-900">
+                      {systemHealth.apiResponseTime || '0'}ms
+                    </span>
+                    <Chip 
+                      size="sm" 
+                      color={systemHealth.apiResponseTime < 200 ? 'success' : systemHealth.apiResponseTime < 500 ? 'warning' : 'danger'} 
+                      variant="flat"
+                    >
+                      {systemHealth.apiResponseTime < 200 ? 'Healthy' : systemHealth.apiResponseTime < 500 ? 'Slow' : 'Critical'}
                     </Chip>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Database Status</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-gray-900">Normal</span>
-                    <Chip size="sm" color="success" variant="flat">
-                      Online
+                    <span className="text-lg font-semibold text-gray-900">
+                      {systemHealth.databaseStatus || 'Unknown'}
+                    </span>
+                    <Chip 
+                      size="sm" 
+                      color={systemHealth.databaseStatus === 'Online' ? 'success' : 'danger'} 
+                      variant="flat"
+                    >
+                      {systemHealth.databaseStatus || 'Unknown'}
                     </Chip>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">AI Service</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-gray-900">Active</span>
-                    <Chip size="sm" color="success" variant="flat">
-                      Operational
+                    <span className="text-lg font-semibold text-gray-900">
+                      {systemHealth.aiServiceStatus || 'Unknown'}
+                    </span>
+                    <Chip 
+                      size="sm" 
+                      color={systemHealth.aiServiceStatus === 'Active' ? 'success' : 'danger'} 
+                      variant="flat"
+                    >
+                      {systemHealth.aiServiceStatus || 'Unknown'}
                     </Chip>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Payment Gateway</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-gray-900">Connected</span>
-                    <Chip size="sm" color="success" variant="flat">
-                      Razorpay
+                    <span className="text-lg font-semibold text-gray-900">
+                      {systemHealth.paymentGatewayStatus || 'Unknown'}
+                    </span>
+                    <Chip 
+                      size="sm" 
+                      color={systemHealth.paymentGatewayStatus === 'Connected' ? 'success' : 'danger'} 
+                      variant="flat"
+                    >
+                      {systemHealth.paymentGatewayStatus || 'Unknown'}
                     </Chip>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Storage Usage</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-gray-900">68%</span>
+                    <span className="text-lg font-semibold text-gray-900">
+                      {systemHealth.storageUsage || '0'}%
+                    </span>
                     <Progress 
-                      value={68} 
+                      value={systemHealth.storageUsage || 0} 
                       size="sm"
-                      color="warning"
+                      color={systemHealth.storageUsage > 80 ? 'danger' : systemHealth.storageUsage > 60 ? 'warning' : 'success'}
                       className="w-20"
                     />
                   </div>

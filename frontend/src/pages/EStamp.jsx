@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import api from '../services/api';
+import { estampAPI, utils } from '../services/api';
 import { toast } from 'react-hot-toast';
 import {
   FileText, Upload, Download, CheckCircle, Clock,
@@ -23,12 +23,12 @@ const EStamp = () => {
   const fetchEStamps = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/estamp/my-requests');
-      if (response.data.success) {
-        setEStamps(response.data.data.eStamps);
+      const response = await estampAPI.getMyRequests();
+      if (response.success) {
+        setEStamps(response.data.eStamps);
       }
     } catch (error) {
-      toast.error('Failed to fetch e-stamp requests');
+      utils.handleError(error, 'Failed to fetch e-stamp requests');
     } finally {
       setLoading(false);
     }

@@ -130,7 +130,7 @@ const appointmentSchema = new mongoose.Schema({
 });
 
 // Index for better query performance
-appointmentSchema.index({ userId: 1, scheduledDate: -1 });
+appointmentSchema.index({ scheduledDate: -1 });
 appointmentSchema.index({ lawyerId: 1, scheduledDate: -1 });
 appointmentSchema.index({ status: 1 });
 appointmentSchema.index({ paymentStatus: 1 });

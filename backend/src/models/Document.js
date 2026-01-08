@@ -267,7 +267,7 @@ const documentSchema = new mongoose.Schema({
 });
 
 // Index for better query performance
-documentSchema.index({ userId: 1, createdAt: -1 });
+documentSchema.index({ createdAt: -1 });
 documentSchema.index({ lawyerId: 1, createdAt: -1 });
 documentSchema.index({ type: 1 });
 documentSchema.index({ status: 1 });

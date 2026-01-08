@@ -179,6 +179,10 @@ const lawyerSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
   socialLinks: {
     linkedin: String,
     website: String,
@@ -221,7 +225,6 @@ const lawyerSchema = new mongoose.Schema({
 });
 
 // Index for better search performance
-lawyerSchema.index({ userId: 1 });
 lawyerSchema.index({ specialization: 1 });
 lawyerSchema.index({ location: 1 });
 lawyerSchema.index({ 'rating.average': -1 });

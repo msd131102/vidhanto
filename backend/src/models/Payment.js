@@ -4,7 +4,8 @@ const paymentSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   type: {
     type: String,
@@ -127,10 +128,9 @@ const paymentSchema = new mongoose.Schema({
 });
 
 // Index for better query performance
-paymentSchema.index({ userId: 1, createdAt: -1 });
+paymentSchema.index({ createdAt: -1 });
 paymentSchema.index({ status: 1 });
 paymentSchema.index({ type: 1 });
-paymentSchema.index({ transactionId: 1 });
 paymentSchema.index({ gatewayTransactionId: 1 });
 paymentSchema.index({ gatewayOrderId: 1 });
 

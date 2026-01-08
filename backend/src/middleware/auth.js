@@ -6,7 +6,10 @@ const authenticate = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
+    console.log('Auth middleware - Token received:', token ? 'YES' : 'NO');
+    
     if (!token) {
+      console.log('Auth middleware - No token provided');
       return res.status(401).json({ 
         success: false, 
         message: 'Access denied. No token provided.' 
@@ -14,9 +17,13 @@ const authenticate = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Auth middleware - Token decoded:', { id: decoded.id, iat: decoded.iat, exp: decoded.exp });
+    
     const user = await User.findById(decoded.id).select('-password');
+    console.log('Auth middleware - User found:', user ? 'YES' : 'NO');
     
     if (!user) {
+      console.log('Auth middleware - User not found in database');
       return res.status(401).json({ 
         success: false, 
         message: 'Invalid token. User not found.' 
@@ -24,6 +31,7 @@ const authenticate = async (req, res, next) => {
     }
 
     if (!user.isActive) {
+      console.log('Auth middleware - User is deactivated');
       return res.status(401).json({ 
         success: false, 
         message: 'Account is deactivated.' 
@@ -31,8 +39,10 @@ const authenticate = async (req, res, next) => {
     }
 
     req.user = user;
+    console.log('Auth middleware - Authentication successful');
     next();
   } catch (error) {
+    console.log('Auth middleware - Error:', error.name, error.message);
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({ 
         success: false, 

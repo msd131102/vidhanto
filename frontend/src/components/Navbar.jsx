@@ -11,11 +11,14 @@ import {
   MessageSquare,
   Calendar,
   FileText,
-  Home
+  Home,
+  DollarSign,
+  Settings,
+  Briefcase
 } from 'lucide-react';
 
 const Navbar = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isLawyer } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -55,11 +58,10 @@ const Navbar = () => {
               <>
                 <Link
                   to="/dashboard"
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActivePath('/dashboard')
-                      ? 'text-primary-600 bg-primary-50'
-                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActivePath('/dashboard')
+                    ? 'text-primary-600 bg-primary-50'
+                    : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                    }`}
                 >
                   <Home className="w-4 h-4" />
                   <span>Dashboard</span>
@@ -67,11 +69,10 @@ const Navbar = () => {
 
                 <Link
                   to="/lawyers"
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActivePath('/lawyers')
-                      ? 'text-primary-600 bg-primary-50'
-                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActivePath('/lawyers')
+                    ? 'text-primary-600 bg-primary-50'
+                    : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                    }`}
                 >
                   <Users className="w-4 h-4" />
                   <span>Lawyers</span>
@@ -79,11 +80,10 @@ const Navbar = () => {
 
                 <Link
                   to="/ai-chat"
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActivePath('/ai-chat')
-                      ? 'text-primary-600 bg-primary-50'
-                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActivePath('/ai-chat')
+                    ? 'text-primary-600 bg-primary-50'
+                    : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                    }`}
                 >
                   <MessageSquare className="w-4 h-4" />
                   <span>AI Assistant</span>
@@ -91,11 +91,10 @@ const Navbar = () => {
 
                 <Link
                   to="/appointments"
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActivePath('/appointments')
-                      ? 'text-primary-600 bg-primary-50'
-                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActivePath('/appointments')
+                    ? 'text-primary-600 bg-primary-50'
+                    : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                    }`}
                 >
                   <Calendar className="w-4 h-4" />
                   <span>Appointments</span>
@@ -103,18 +102,30 @@ const Navbar = () => {
 
                 <Link
                   to="/documents"
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActivePath('/documents')
-                      ? 'text-primary-600 bg-primary-50'
-                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActivePath('/documents')
+                    ? 'text-primary-600 bg-primary-50'
+                    : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                    }`}
                 >
                   <FileText className="w-4 h-4" />
                   <span>Documents</span>
                 </Link>
 
+                {isLawyer() && (
+                  <Link
+                    to="/payments"
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActivePath('/payments')
+                      ? 'text-primary-600 bg-primary-50'
+                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                      }`}
+                  >
+                    <DollarSign className="w-4 h-4" />
+                    <span>Earnings</span>
+                  </Link>
+                )}
+
                 <div className="flex items-center space-x-3 pl-3">
-                  <span className="text-sm text-gray-700">Welcome, {user?.name?.split(' ')[0]}</span>
+                  <span className="text-sm text-gray-700">Welcome, {user?.firstName || user?.name?.split(' ')[0]}</span>
                   <button
                     onClick={handleLogout}
                     className="text-red-600 hover:text-red-700 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -127,35 +138,34 @@ const Navbar = () => {
               <>
                 <Link
                   to="/"
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActivePath('/')
-                      ? 'text-primary-600 bg-primary-50'
-                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActivePath('/')
+                    ? 'text-primary-600 bg-primary-50'
+                    : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                    }`}
                 >
                   <Home className="w-4 h-4" />
                   <span>Home</span>
                 </Link>
 
                 <div className="flex items-center space-x-3 pl-3">
-                <Link
-                  to="/payments"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Payments
-                </Link>
-                <Link
-                  to="/esignature"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  E-Signature
-                </Link>
-                <Link
-                  to="/estamp"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  E-Stamp
-                </Link>
+                  <Link
+                    to="/payments"
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Payments
+                  </Link>
+                  <Link
+                    to="/esignature"
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    E-Signature
+                  </Link>
+                  <Link
+                    to="/estamp"
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    E-Stamp
+                  </Link>
                   <Link
                     to="/register"
                     className="btn-gradient text-white px-4 py-2 rounded-md text-sm font-medium"

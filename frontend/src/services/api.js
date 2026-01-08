@@ -48,7 +48,7 @@ api.interceptors.response.use(
           refreshToken,
         });
         
-        const { accessToken, refreshToken: newRefreshToken } = response.data.data.tokens;
+        const { accessToken, refreshToken: newRefreshToken } = response.data.data;
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', newRefreshToken);
         
@@ -103,12 +103,11 @@ export const authAPI = {
     
     // Store tokens and user data
     if (response.data.success) {
-      const { accessToken, refreshToken } = response.data.data.tokens;
-      const user = response.data.data.user;
+      const { accessToken, refreshToken, ...userData } = response.data.data;
       
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(userData));
     }
     
     return response.data;
@@ -152,8 +151,73 @@ export const usersAPI = {
     return response.data;
   },
   
+  updateAddress: async (addressData) => {
+    const response = await api.put('/users/address', addressData);
+    return response.data;
+  },
+  
+  updatePreferences: async (preferencesData) => {
+    const response = await api.put('/users/preferences', preferencesData);
+    return response.data;
+  },
+  
+  deleteAccount: async () => {
+    const response = await api.delete('/users/account');
+    return response.data;
+  },
+  
   getDashboard: async () => {
     const response = await api.get('/users/dashboard');
+    return response.data;
+  }
+};
+
+// Dashboard API
+export const dashboardAPI = {
+  getStats: async () => {
+    const response = await api.get('/users/dashboard/stats');
+    return response.data;
+  },
+  
+  getRecentAppointments: async (limit = 5) => {
+    const response = await api.get(`/users/dashboard/recent-appointments?limit=${limit}`);
+    return response.data;
+  },
+  
+  getRecentDocuments: async (limit = 5) => {
+    const response = await api.get(`/users/dashboard/recent-documents?limit=${limit}`);
+    return response.data;
+  },
+
+  // User-specific dashboard APIs
+  getUserStats: async () => {
+    const response = await api.get('/users/dashboard/stats');
+    return response.data;
+  },
+
+  getRecommendedLawyers: async (limit = 3) => {
+    const response = await api.get(`/users/dashboard/recommended-lawyers?limit=${limit}`);
+    return response.data;
+  },
+
+  // Lawyer-specific dashboard APIs
+  getLawyerStats: async () => {
+    const response = await api.get('/lawyers/dashboard/stats');
+    return response.data;
+  },
+
+  getLawyerAppointments: async (limit = 5) => {
+    const response = await api.get(`/lawyers/dashboard/appointments?limit=${limit}`);
+    return response.data;
+  },
+
+  getLawyerProfile: async () => {
+    const response = await api.get('/lawyers/dashboard/profile');
+    return response.data;
+  },
+
+  getRecentClients: async (limit = 3) => {
+    const response = await api.get(`/lawyers/dashboard/recent-clients?limit=${limit}`);
     return response.data;
   }
 };
@@ -170,13 +234,58 @@ export const lawyersAPI = {
     return response.data;
   },
   
-  registerLawyer: async (lawyerData) => {
-    const response = await api.post('/lawyers/register', lawyerData);
+  getSpecializations: async () => {
+    const response = await api.get('/lawyers/specializations');
     return response.data;
   },
   
-  updateLawyer: async (id, lawyerData) => {
+  getStates: async () => {
+    const response = await api.get('/lawyers/states');
+    return response.data;
+  },
+  
+  createLawyerProfile: async (lawyerData) => {
+    const response = await api.post('/lawyers', lawyerData);
+    return response.data;
+  },
+  
+  updateLawyerProfile: async (id, lawyerData) => {
     const response = await api.put(`/lawyers/${id}`, lawyerData);
+    return response.data;
+  },
+  
+  updateLawyerAvailability: async (id, availability) => {
+    const response = await api.put(`/lawyers/${id}/availability`, { availability });
+    return response.data;
+  },
+  
+  updateLawyerFees: async (id, fees) => {
+    const response = await api.put(`/lawyers/${id}/fees`, fees);
+    return response.data;
+  },
+  
+  uploadLawyerDocuments: async (id, documentData) => {
+    const response = await api.post(`/lawyers/${id}/documents`, documentData);
+    return response.data;
+  },
+  
+  getLawyerAppointments: async (id, params = {}) => {
+    const response = await api.get(`/lawyers/${id}/appointments`, { params });
+    return response.data;
+  },
+  
+  getLawyerStats: async (id) => {
+    const response = await api.get(`/lawyers/${id}/stats`);
+    return response.data;
+  },
+  
+  addLawyerRating: async (id, ratingData) => {
+    const response = await api.post(`/lawyers/${id}/ratings`, ratingData);
+    return response.data;
+  },
+  
+  getLawyerRatings: async (id) => {
+    const response = await api.get(`/lawyers/${id}/ratings`);
     return response.data;
   }
 };
@@ -285,6 +394,84 @@ export const documentsAPI = {
   
   signDocument: async (id, signatureData) => {
     const response = await api.post(`/documents/${id}/sign`, signatureData);
+    return response.data;
+  }
+};
+
+// E-Signature API
+export const esignatureAPI = {
+  getMyRequests: async () => {
+    const response = await api.get('/esignature/my-requests');
+    return response.data;
+  },
+  
+  createRequest: async (requestData) => {
+    const response = await api.post('/esignature/create', requestData);
+    return response.data;
+  },
+  
+  getRequest: async (id) => {
+    const response = await api.get(`/esignature/${id}`);
+    return response.data;
+  },
+  
+  updateRequest: async (id, data) => {
+    const response = await api.put(`/esignature/${id}`, data);
+    return response.data;
+  },
+  
+  deleteRequest: async (id) => {
+    const response = await api.delete(`/esignature/${id}`);
+    return response.data;
+  },
+  
+  signRequest: async (id, signatureData) => {
+    const response = await api.post(`/esignature/${id}/sign`, signatureData);
+    return response.data;
+  },
+  
+  getToSign: async () => {
+    const response = await api.get('/esignature/to-sign');
+    return response.data;
+  }
+};
+
+// E-Stamp API
+export const estampAPI = {
+  getMyRequests: async () => {
+    const response = await api.get('/estamp/my-requests');
+    return response.data;
+  },
+  
+  createRequest: async (requestData) => {
+    const response = await api.post('/estamp/create', requestData);
+    return response.data;
+  },
+  
+  getRequest: async (id) => {
+    const response = await api.get(`/estamp/${id}`);
+    return response.data;
+  },
+  
+  updateRequest: async (id, data) => {
+    const response = await api.put(`/estamp/${id}`, data);
+    return response.data;
+  },
+  
+  deleteRequest: async (id) => {
+    const response = await api.delete(`/estamp/${id}`);
+    return response.data;
+  },
+  
+  verifyStamp: async (id, verificationData) => {
+    const response = await api.post(`/estamp/${id}/verify`, verificationData);
+    return response.data;
+  },
+  
+  downloadCertificate: async (id) => {
+    const response = await api.get(`/estamp/${id}/download`, {
+      responseType: 'blob'
+    });
     return response.data;
   }
 };

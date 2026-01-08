@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect, useMemo, useCallback } from 'react';
 import { authAPI, utils } from '../services/api';
 import { toast } from 'react-hot-toast';
 
@@ -123,12 +123,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Login function
-  const login = async (credentials) => {
+  const login = useCallback(async (credentials) => {
     dispatch({ type: AUTH_ACTIONS.LOGIN_START });
-    
+
     try {
       const response = await authAPI.login(credentials);
-      
+
       if (response.success) {
         dispatch({
           type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -148,15 +148,15 @@ export const AuthProvider = ({ children }) => {
       toast.error(errorMessage);
       throw error;
     }
-  };
+  }, [dispatch]);
 
   // Register function
-  const register = async (userData) => {
+  const register = useCallback(async (userData) => {
     dispatch({ type: AUTH_ACTIONS.REGISTER_START });
-    
+
     try {
       const response = await authAPI.register(userData);
-      
+
       if (response.success) {
         dispatch({
           type: AUTH_ACTIONS.REGISTER_SUCCESS,
@@ -176,20 +176,20 @@ export const AuthProvider = ({ children }) => {
       toast.error(errorMessage);
       throw error;
     }
-  };
+  }, [dispatch]);
 
   // Logout function
-  const logout = () => {
+  const logout = useCallback(() => {
     utils.logout();
     dispatch({ type: AUTH_ACTIONS.LOGOUT });
     toast.success('Logged out successfully');
-  };
+  }, [dispatch]);
 
   // Verify email function
-  const verifyEmail = async (token) => {
+  const verifyEmail = useCallback(async (token) => {
     try {
       const response = await authAPI.verifyEmail(token);
-      
+
       if (response.success) {
         toast.success('Email verified successfully!');
         return response.data;
@@ -201,13 +201,13 @@ export const AuthProvider = ({ children }) => {
       toast.error(errorMessage);
       throw error;
     }
-  };
+  }, []);
 
   // Forgot password function
-  const forgotPassword = async (email) => {
+  const forgotPassword = useCallback(async (email) => {
     try {
       const response = await authAPI.forgotPassword(email);
-      
+
       if (response.success) {
         toast.success('Password reset email sent!');
         return response.data;
@@ -219,13 +219,13 @@ export const AuthProvider = ({ children }) => {
       toast.error(errorMessage);
       throw error;
     }
-  };
+  }, []);
 
   // Reset password function
-  const resetPassword = async (token, password) => {
+  const resetPassword = useCallback(async (token, password) => {
     try {
       const response = await authAPI.resetPassword(token, password);
-      
+
       if (response.success) {
         toast.success('Password reset successfully!');
         return response.data;
@@ -237,10 +237,10 @@ export const AuthProvider = ({ children }) => {
       toast.error(errorMessage);
       throw error;
     }
-  };
+  }, []);
 
   // Update user profile
-  const updateUser = async (userData) => {
+  const updateUser = useCallback((userData) => {
     try {
       dispatch({ type: AUTH_ACTIONS.UPDATE_USER, payload: userData });
       // Update localStorage as well
@@ -250,38 +250,38 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Failed to update user:', error);
     }
-  };
+  }, [dispatch]);
 
   // Clear error function
-  const clearError = () => {
+  const clearError = useCallback(() => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
-  };
+  }, [dispatch]);
 
   // Check if user has specific role
-  const hasRole = (role) => {
+  const hasRole = useCallback((role) => {
     return state.user?.role === role;
-  };
+  }, [state.user]);
 
   // Check if user is lawyer
-  const isLawyer = () => {
+  const isLawyer = useCallback(() => {
     return state.user?.role === 'lawyer';
-  };
+  }, [state.user]);
 
   // Check if user is admin
-  const isAdmin = () => {
+  const isAdmin = useCallback(() => {
     return state.user?.role === 'admin';
-  };
+  }, [state.user]);
 
   // Get user display name
-  const getDisplayName = () => {
+  const getDisplayName = useCallback(() => {
     if (!state.user) return '';
     return `${state.user.firstName} ${state.user.lastName}`.trim();
-  };
+  }, [state.user]);
 
-  const value = {
+  const value = useMemo(() => ({
     // State
     ...state,
-    
+
     // Actions
     login,
     register,
@@ -291,13 +291,13 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     updateUser,
     clearError,
-    
+
     // Helpers
     hasRole,
     isLawyer,
     isAdmin,
     getDisplayName,
-  };
+  }), [state, login, register, logout, verifyEmail, forgotPassword, resetPassword, clearError, hasRole, isLawyer, isAdmin, getDisplayName]);
 
   return (
     <AuthContext.Provider value={value}>
