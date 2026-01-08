@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { lawyersAPI } from '../services/api';
+import BookingModal from '../components/BookingModal';
 
 const Lawyers = () => {
   const { user, isAuthenticated } = useAuth();
   const [lawyers, setLawyers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedLawyer, setSelectedLawyer] = useState(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   useEffect(() => {
     loadLawyers();
@@ -49,6 +52,21 @@ const Lawyers = () => {
 
   const getLawyerRating = (lawyer) => {
     return lawyer.rating?.average || lawyer.averageRating || 0;
+  };
+
+  const handleBookAppointment = (lawyer) => {
+    setSelectedLawyer(lawyer);
+    setIsBookingModalOpen(true);
+  };
+
+  const handleCloseBookingModal = () => {
+    setSelectedLawyer(null);
+    setIsBookingModalOpen(false);
+  };
+
+  const handleBookingSuccess = (appointment) => {
+    // Optionally refresh lawyers or show success message
+    console.log('Appointment booked:', appointment);
   };
 
   if (!isAuthenticated) {
@@ -181,11 +199,32 @@ const Lawyers = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Book Appointment Button */}
+                <div className="border-t pt-4">
+                  <button
+                    onClick={() => handleBookAppointment(lawyer)}
+                    className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
+                  >
+                    <span>📅</span>
+                    Book Appointment
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Booking Modal */}
+      {selectedLawyer && (
+        <BookingModal
+          lawyer={selectedLawyer}
+          isOpen={isBookingModalOpen}
+          onClose={handleCloseBookingModal}
+          onBookingSuccess={handleBookingSuccess}
+        />
+      )}
     </div>
   );
 };

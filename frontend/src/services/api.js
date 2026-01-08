@@ -151,6 +151,21 @@ export const usersAPI = {
     return response.data;
   },
   
+  updateAddress: async (addressData) => {
+    const response = await api.put('/users/address', addressData);
+    return response.data;
+  },
+  
+  updatePreferences: async (preferencesData) => {
+    const response = await api.put('/users/preferences', preferencesData);
+    return response.data;
+  },
+  
+  deleteAccount: async () => {
+    const response = await api.delete('/users/account');
+    return response.data;
+  },
+  
   getDashboard: async () => {
     const response = await api.get('/users/dashboard');
     return response.data;
@@ -172,6 +187,38 @@ export const dashboardAPI = {
   getRecentDocuments: async (limit = 5) => {
     const response = await api.get(`/users/dashboard/recent-documents?limit=${limit}`);
     return response.data;
+  },
+
+  // User-specific dashboard APIs
+  getUserStats: async () => {
+    const response = await api.get('/users/dashboard/stats');
+    return response.data;
+  },
+
+  getRecommendedLawyers: async (limit = 3) => {
+    const response = await api.get(`/users/dashboard/recommended-lawyers?limit=${limit}`);
+    return response.data;
+  },
+
+  // Lawyer-specific dashboard APIs
+  getLawyerStats: async () => {
+    const response = await api.get('/lawyers/dashboard/stats');
+    return response.data;
+  },
+
+  getLawyerAppointments: async (limit = 5) => {
+    const response = await api.get(`/lawyers/dashboard/appointments?limit=${limit}`);
+    return response.data;
+  },
+
+  getLawyerProfile: async () => {
+    const response = await api.get('/lawyers/dashboard/profile');
+    return response.data;
+  },
+
+  getRecentClients: async (limit = 3) => {
+    const response = await api.get(`/lawyers/dashboard/recent-clients?limit=${limit}`);
+    return response.data;
   }
 };
 
@@ -187,13 +234,58 @@ export const lawyersAPI = {
     return response.data;
   },
   
-  registerLawyer: async (lawyerData) => {
-    const response = await api.post('/lawyers/register', lawyerData);
+  getSpecializations: async () => {
+    const response = await api.get('/lawyers/specializations');
     return response.data;
   },
   
-  updateLawyer: async (id, lawyerData) => {
+  getStates: async () => {
+    const response = await api.get('/lawyers/states');
+    return response.data;
+  },
+  
+  createLawyerProfile: async (lawyerData) => {
+    const response = await api.post('/lawyers', lawyerData);
+    return response.data;
+  },
+  
+  updateLawyerProfile: async (id, lawyerData) => {
     const response = await api.put(`/lawyers/${id}`, lawyerData);
+    return response.data;
+  },
+  
+  updateLawyerAvailability: async (id, availability) => {
+    const response = await api.put(`/lawyers/${id}/availability`, { availability });
+    return response.data;
+  },
+  
+  updateLawyerFees: async (id, fees) => {
+    const response = await api.put(`/lawyers/${id}/fees`, fees);
+    return response.data;
+  },
+  
+  uploadLawyerDocuments: async (id, documentData) => {
+    const response = await api.post(`/lawyers/${id}/documents`, documentData);
+    return response.data;
+  },
+  
+  getLawyerAppointments: async (id, params = {}) => {
+    const response = await api.get(`/lawyers/${id}/appointments`, { params });
+    return response.data;
+  },
+  
+  getLawyerStats: async (id) => {
+    const response = await api.get(`/lawyers/${id}/stats`);
+    return response.data;
+  },
+  
+  addLawyerRating: async (id, ratingData) => {
+    const response = await api.post(`/lawyers/${id}/ratings`, ratingData);
+    return response.data;
+  },
+  
+  getLawyerRatings: async (id) => {
+    const response = await api.get(`/lawyers/${id}/ratings`);
     return response.data;
   }
 };
