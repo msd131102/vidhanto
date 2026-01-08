@@ -5,7 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const ESignature = require('../models/ESignature');
 const Document = require('../models/Document');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const emailService = require('../services/emailService');
 
 // Configure multer for signature uploads
@@ -25,7 +25,7 @@ const upload = multer({
 });
 
 // Create new e-signature request
-router.post('/create', auth, async (req, res) => {
+router.post('/create', authenticate, async (req, res) => {
   try {
     const { documentId, signers, settings } = req.body;
     const userId = req.user._id;
@@ -99,7 +99,7 @@ router.post('/create', auth, async (req, res) => {
 });
 
 // Send document for signing
-router.post('/:id/send', auth, async (req, res) => {
+router.post('/:id/send', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user._id;
@@ -234,7 +234,7 @@ router.post('/:id/sign', async (req, res) => {
 });
 
 // Upload signature image
-router.post('/:id/upload-signature', auth, upload.single('signature'), async (req, res) => {
+router.post('/:id/upload-signature', authenticate, upload.single('signature'), async (req, res) => {
   try {
     const { id } = req.params;
     const { signerEmail } = req.body;
@@ -312,7 +312,7 @@ router.post('/:id/upload-signature', auth, upload.single('signature'), async (re
 });
 
 // Get e-signature details
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user._id;
@@ -355,7 +355,7 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // Get user's e-signature requests
-router.get('/my-requests', auth, async (req, res) => {
+router.get('/my-requests', authenticate, async (req, res) => {
   try {
     const userId = req.user._id;
     const { page = 1, limit = 10, status } = req.query;
@@ -398,7 +398,7 @@ router.get('/my-requests', auth, async (req, res) => {
 });
 
 // Download signed document
-router.get('/:id/download', auth, async (req, res) => {
+router.get('/:id/download', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user._id;

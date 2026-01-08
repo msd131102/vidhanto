@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Blog = require('../models/Blog');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 
@@ -89,6 +89,57 @@ router.get('/', async function(req, res) {
   }
 });
 
+// Admin routes (protected) - These must come before /:slug routes
+// Get all blogs (including drafts) - Admin only
+router.get('/admin/all', authenticate, async function(req, res) {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      search
+    } = req.query;
+
+    const query = {};
+    
+    if (status && status !== 'all') {
+      query.status = status;
+    }
+
+    if (search) {
+      query.$text = { $search: search };
+    }
+
+    const skip = (page - 1) * limit;
+
+    const blogs = await Blog.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Blog.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        blogs,
+        pagination: {
+          current: page,
+          pages: Math.ceil(total / limit),
+          total
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get all blogs error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch blogs',
+      error: error.message
+    });
+  }
+});
+
 // Get related blogs (must come before /:slug route)
 router.get('/related/:slug', async function(req, res) {
   try {
@@ -161,59 +212,8 @@ router.get('/:slug', async function(req, res) {
   }
 });
 
-// Admin routes (protected)
-// Get all blogs (including drafts) - Admin only
-router.get('/admin/all', auth, async function(req, res) {
-  try {
-    const {
-      page = 1,
-      limit = 10,
-      status,
-      search
-    } = req.query;
-
-    const query = {};
-    
-    if (status && status !== 'all') {
-      query.status = status;
-    }
-
-    if (search) {
-      query.$text = { $search: search };
-    }
-
-    const skip = (page - 1) * limit;
-
-    const blogs = await Blog.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
-
-    const total = await Blog.countDocuments(query);
-
-    res.json({
-      success: true,
-      data: {
-        blogs,
-        pagination: {
-          current: page,
-          pages: Math.ceil(total / limit),
-          total
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Get all blogs error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch blogs',
-      error: error.message
-    });
-  }
-});
-
 // Create new blog - Admin only
-router.post('/admin', auth, upload.single('featuredImage'), async function(req, res) {
+router.post('/admin', authenticate, upload.single('featuredImage'), async function(req, res) {
   try {
     const blogData = {
       ...req.body,
@@ -256,7 +256,7 @@ router.post('/admin', auth, upload.single('featuredImage'), async function(req, 
 });
 
 // Update blog - Admin only
-router.put('/admin/:id', auth, upload.single('featuredImage'), async function(req, res) {
+router.put('/admin/:id', authenticate, upload.single('featuredImage'), async function(req, res) {
   try {
     const { id } = req.params;
     const updateData = { ...req.body };
@@ -302,7 +302,7 @@ router.put('/admin/:id', auth, upload.single('featuredImage'), async function(re
 });
 
 // Delete blog - Admin only
-router.delete('/admin/:id', auth, async function(req, res) {
+router.delete('/admin/:id', authenticate, async function(req, res) {
   try {
     const { id } = req.params;
 
@@ -330,7 +330,7 @@ router.delete('/admin/:id', auth, async function(req, res) {
 });
 
 // Add comment to blog
-router.post('/:slug/comments', auth, async function(req, res) {
+router.post('/:slug/comments', authenticate, async function(req, res) {
   try {
     const { slug } = req.params;
     const { content } = req.body;
@@ -379,7 +379,7 @@ router.post('/:slug/comments', auth, async function(req, res) {
 });
 
 // Like/unlike blog
-router.post('/:slug/like', auth, async function(req, res) {
+router.post('/:slug/like', authenticate, async function(req, res) {
   try {
     const { slug } = req.params;
 
@@ -410,7 +410,7 @@ router.post('/:slug/like', auth, async function(req, res) {
 });
 
 // Get blog statistics
-router.get('/admin/stats', auth, async function(req, res) {
+router.get('/admin/stats', authenticate, async function(req, res) {
   try {
     const stats = await Blog.aggregate([
       {
