@@ -4,7 +4,9 @@ const messageSchema = new mongoose.Schema({
   sender: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: function() {
+      return !this.isAI; // Sender is required for non-AI messages
+    }
   },
   content: {
     type: String,
@@ -55,11 +57,13 @@ const chatSchema = new mongoose.Schema({
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: function() {
+        return this.role !== 'ai'; // User is required unless it's an AI participant
+      }
     },
     role: {
       type: String,
-      enum: ['user', 'lawyer', 'admin'],
+      enum: ['user', 'lawyer', 'admin', 'ai'],
       required: true
     }
   }],
@@ -178,10 +182,25 @@ chatSchema.pre('save', function(next) {
 });
 
 // Method to add message
-chatSchema.methods.addMessage = function(messageData) {
+chatSchema.methods.addMessage = async function(messageData) {
   this.messages.push(messageData);
   this.updatedAt = new Date();
-  return this.save();
+  
+  // Update lastMessage manually to avoid pre-save conflicts
+  this.lastMessage = {
+    content: messageData.content,
+    sender: messageData.sender,
+    createdAt: messageData.createdAt || new Date()
+  };
+  
+  try {
+    const savedChat = await this.save();
+    // Return the newly added message
+    return this.messages[this.messages.length - 1];
+  } catch (error) {
+    console.error('Error saving chat with new message:', error);
+    throw error;
+  }
 };
 
 // Method to end chat

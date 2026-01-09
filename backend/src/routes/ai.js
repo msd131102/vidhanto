@@ -28,7 +28,11 @@ Remember: Your goal is to educate and guide users about the Indian legal system,
 // @desc    Send message to AI chat
 router.post('/chat', authenticate, rateLimitByUser(20, 60000), [ // 20 messages per minute
   body('message').trim().isLength({ min: 1, max: 2000 }).withMessage('Message must be 1-2000 characters'),
-  body('chatId').optional().isMongoId().withMessage('Invalid chat ID')
+  body('chatId').optional().custom((value) => {
+    if (!value) return true; // Optional field
+    // Simple ObjectId validation - 24 character hex string
+    return /^[0-9a-fA-F]{24}$/.test(value) || 'Invalid chat ID format';
+  })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -78,8 +82,14 @@ router.post('/chat', authenticate, rateLimitByUser(20, 60000), [ // 20 messages 
     // Generate AI response
     try {
       const prompt = `${LEGAL_SYSTEM_PROMPT}\n\nUser: ${message}`;
-      const result = await model.generateContent(prompt);
+      console.log('🤖 Sending prompt to AI:', prompt.substring(0, 100) + '...');
+      
+      const result = await model.generateContent({
+        contents: [{ parts: [{ text: prompt }] }]
+      });
+      
       const aiResponse = result.response.text();
+      console.log('✅ AI response received:', aiResponse.substring(0, 100) + '...');
 
       // Add AI response to chat
       const aiMessage = await chat.addMessage({
@@ -141,11 +151,33 @@ router.post('/chat', authenticate, rateLimitByUser(20, 60000), [ // 20 messages 
         message: 'AI service temporarily unavailable'
       });
     }
-  } catch (error) {
+    } catch (error) {
     console.error('Chat AI error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      code: error.code
+    });
+    
+    // Check if it's a Google AI quota error
+    if (error.message && error.message.includes('quota')) {
+      res.status(429).json({
+        success: false,
+        message: 'AI service temporarily unavailable due to quota limits. Please try again later.',
+        errorType: 'quota_exceeded'
+      });
+      return;
+    }
+    
     res.status(500).json({
       success: false,
-      message: 'Server error processing AI chat'
+      message: 'Server error processing AI chat',
+      error: {
+        type: error.name,
+        message: error.message,
+        stack: error.stack
+      }
     });
   }
 });

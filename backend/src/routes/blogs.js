@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Blog = require('../models/Blog');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 
@@ -127,43 +127,9 @@ router.get('/related/:slug', async function(req, res) {
   }
 });
 
-// Get single blog by slug (public)
-router.get('/:slug', async function(req, res) {
-  try {
-    const { slug } = req.params;
-
-    const blog = await Blog.findOne({ 
-      slug, 
-      status: 'published' 
-    }).populate('comments.user', 'name email');
-
-    if (!blog) {
-      return res.status(404).json({
-        success: false,
-        message: 'Blog not found'
-      });
-    }
-
-    // Increment views
-    await Blog.findByIdAndUpdate(blog._id, { $inc: { views: 1 } });
-
-    res.json({
-      success: true,
-      data: { blog }
-    });
-  } catch (error) {
-    console.error('Get blog error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch blog',
-      error: error.message
-    });
-  }
-});
-
 // Admin routes (protected)
 // Get all blogs (including drafts) - Admin only
-router.get('/admin/all', auth, async function(req, res) {
+router.get('/admin/all', authenticate, async function(req, res) {
   try {
     const {
       page = 1,
@@ -213,7 +179,7 @@ router.get('/admin/all', auth, async function(req, res) {
 });
 
 // Create new blog - Admin only
-router.post('/admin', auth, upload.single('featuredImage'), async function(req, res) {
+router.post('/admin', authenticate, upload.single('featuredImage'), async function(req, res) {
   try {
     const blogData = {
       ...req.body,
@@ -256,7 +222,7 @@ router.post('/admin', auth, upload.single('featuredImage'), async function(req, 
 });
 
 // Update blog - Admin only
-router.put('/admin/:id', auth, upload.single('featuredImage'), async function(req, res) {
+router.put('/admin/:id', authenticate, upload.single('featuredImage'), async function(req, res) {
   try {
     const { id } = req.params;
     const updateData = { ...req.body };
@@ -302,7 +268,7 @@ router.put('/admin/:id', auth, upload.single('featuredImage'), async function(re
 });
 
 // Delete blog - Admin only
-router.delete('/admin/:id', auth, async function(req, res) {
+router.delete('/admin/:id', authenticate, async function(req, res) {
   try {
     const { id } = req.params;
 
@@ -330,7 +296,7 @@ router.delete('/admin/:id', auth, async function(req, res) {
 });
 
 // Add comment to blog
-router.post('/:slug/comments', auth, async function(req, res) {
+router.post('/:slug/comments', authenticate, async function(req, res) {
   try {
     const { slug } = req.params;
     const { content } = req.body;
@@ -379,7 +345,7 @@ router.post('/:slug/comments', auth, async function(req, res) {
 });
 
 // Like/unlike blog
-router.post('/:slug/like', auth, async function(req, res) {
+router.post('/:slug/like', authenticate, async function(req, res) {
   try {
     const { slug } = req.params;
 
@@ -410,7 +376,7 @@ router.post('/:slug/like', auth, async function(req, res) {
 });
 
 // Get blog statistics
-router.get('/admin/stats', auth, async function(req, res) {
+router.get('/admin/stats', authenticate, async function(req, res) {
   try {
     const stats = await Blog.aggregate([
       {
@@ -472,6 +438,40 @@ router.get('/admin/stats', auth, async function(req, res) {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch blog statistics',
+      error: error.message
+    });
+  }
+});
+
+// Get single blog by slug (public) - Must come after all specific routes
+router.get('/:slug', async function(req, res) {
+  try {
+    const { slug } = req.params;
+
+    const blog = await Blog.findOne({ 
+      slug, 
+      status: 'published' 
+    }).populate('comments.user', 'name email');
+
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: 'Blog not found'
+      });
+    }
+
+    // Increment views
+    await Blog.findByIdAndUpdate(blog._id, { $inc: { views: 1 } });
+
+    res.json({
+      success: true,
+      data: { blog }
+    });
+  } catch (error) {
+    console.error('Get blog error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch blog',
       error: error.message
     });
   }

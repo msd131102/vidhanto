@@ -5,7 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const EStamp = require('../models/EStamp');
 const Document = require('../models/Document');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const paymentService = require('../services/paymentService');
 const emailService = require('../services/emailService');
 
@@ -28,7 +28,7 @@ const upload = multer({
 });
 
 // Create new e-stamp request
-router.post('/create', auth, upload.single('document'), async (req, res) => {
+router.post('/create', authenticate, upload.single('document'), async (req, res) => {
   try {
     const {
       state,
@@ -112,7 +112,7 @@ router.post('/create', auth, upload.single('document'), async (req, res) => {
 });
 
 // Initiate payment for e-stamp
-router.post('/:id/payment', auth, async (req, res) => {
+router.post('/:id/payment', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user._id;
@@ -177,7 +177,7 @@ router.post('/:id/payment', auth, async (req, res) => {
 });
 
 // Verify payment and process e-stamp
-router.post('/:id/payment/verify', auth, async (req, res) => {
+router.post('/:id/payment/verify', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
@@ -269,7 +269,7 @@ router.post('/:id/payment/verify', auth, async (req, res) => {
 });
 
 // Get e-stamp details
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user._id;
@@ -309,7 +309,7 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // Get user's e-stamp requests
-router.get('/my-requests', auth, async (req, res) => {
+router.get('/my-requests', authenticate, async (req, res) => {
   try {
     const userId = req.user._id;
     const { page = 1, limit = 10, status } = req.query;
@@ -352,7 +352,7 @@ router.get('/my-requests', auth, async (req, res) => {
 });
 
 // Download stamped document
-router.get('/:id/download', auth, async (req, res) => {
+router.get('/:id/download', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user._id;
@@ -450,7 +450,7 @@ router.get('/verify/:certificateNumber', async (req, res) => {
 });
 
 // Get stamp duty rates by state
-router.get('/rates/:state', auth, async (req, res) => {
+router.get('/rates/:state', authenticate, async (req, res) => {
   try {
     const { state } = req.params;
     const rates = EStamp.getStampDutyRates(state);
