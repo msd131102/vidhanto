@@ -15,6 +15,9 @@ import Terms from './pages/Terms';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 
+// Public pages
+import AnonymousAIChat from './pages/AnonymousAIChat';
+
 // Protected pages
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
@@ -54,6 +57,7 @@ function App() {
               <Route path="/faq" element={<FAQ />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/anonymous-ai-chat" element={<AnonymousAIChat />} />
               
               {/* Auth routes - only for non-authenticated users */}
               <Route 

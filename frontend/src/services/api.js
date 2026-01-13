@@ -325,6 +325,12 @@ export const aiAPI = {
     return response.data;
   },
   
+  // Anonymous chat (no authentication required)
+  anonymousChat: async (message) => {
+    const response = await axios.post(`${API_BASE_URL}/ai/anonymous-chat`, { message });
+    return response.data;
+  },
+  
   getHistory: async (params = {}) => {
     const response = await api.get('/ai/history', { params });
     return response.data;

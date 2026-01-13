@@ -24,6 +24,22 @@ Important guidelines:
 
 Remember: Your goal is to educate and guide users about the Indian legal system, not to replace professional legal counsel.`;
 
+// Enhanced legal system prompt for anonymous users
+const ANONYMOUS_LEGAL_SYSTEM_PROMPT = `You are an AI Legal Assistant for India.
+
+Rules:
+- Answer ONLY law-related questions
+- Use Indian laws: IPC, CrPC, CPC, Constitution, IT Act, Companies Act
+- Explain in simple language
+- Mention sections where applicable
+- Add disclaimer at the end: "This information is for educational purposes only and not legal advice."
+- Never ask for personal information or case details
+- Do not store or remember any user information
+
+If question is not legal, reply: "I can assist only with legal-related queries."
+
+IMPORTANT: This is an anonymous chat. Do not request any personal information, case details, or identifying information. Focus only on general legal knowledge.`;
+
 // @route   POST /api/ai/chat
 // @desc    Send message to AI chat
 router.post('/chat', authenticate, rateLimitByUser(20, 60000), [ // 20 messages per minute
@@ -83,11 +99,11 @@ router.post('/chat', authenticate, rateLimitByUser(20, 60000), [ // 20 messages 
     try {
       const prompt = `${LEGAL_SYSTEM_PROMPT}\n\nUser: ${message}`;
       console.log('🤖 Sending prompt to AI:', prompt.substring(0, 100) + '...');
-      
+
       const result = await model.generateContent({
         contents: [{ parts: [{ text: prompt }] }]
       });
-      
+
       const aiResponse = result.response.text();
       console.log('✅ AI response received:', aiResponse.substring(0, 100) + '...');
 
@@ -136,7 +152,7 @@ router.post('/chat', authenticate, rateLimitByUser(20, 60000), [ // 20 messages 
       });
     } catch (aiError) {
       console.error('AI generation error:', aiError);
-      
+
       // Add error message to chat
       await chat.addMessage({
         sender: null,
@@ -151,7 +167,7 @@ router.post('/chat', authenticate, rateLimitByUser(20, 60000), [ // 20 messages 
         message: 'AI service temporarily unavailable'
       });
     }
-    } catch (error) {
+  } catch (error) {
     console.error('Chat AI error:', error);
     console.error('Error stack:', error.stack);
     console.error('Error details:', {
@@ -159,7 +175,7 @@ router.post('/chat', authenticate, rateLimitByUser(20, 60000), [ // 20 messages 
       name: error.name,
       code: error.code
     });
-    
+
     // Check if it's a Google AI quota error
     if (error.message && error.message.includes('quota')) {
       res.status(429).json({
@@ -169,7 +185,7 @@ router.post('/chat', authenticate, rateLimitByUser(20, 60000), [ // 20 messages 
       });
       return;
     }
-    
+
     res.status(500).json({
       success: false,
       message: 'Server error processing AI chat',
@@ -350,7 +366,7 @@ router.post('/chat/:id/end', authenticate, async (req, res) => {
     res.json({
       success: true,
       message: 'Chat session ended successfully',
-      data: { 
+      data: {
         chat,
         sessionSummary: {
           totalMessages: chat.messages.length,
@@ -375,7 +391,7 @@ router.post('/chat/:id/end', authenticate, async (req, res) => {
 router.get('/usage', authenticate, async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     // Get all AI chats for the user
     const chats = await Chat.find({
       type: 'ai',
@@ -413,8 +429,8 @@ router.get('/usage', authenticate, async (req, res) => {
           currentYear: new Date().getFullYear(),
           monthlyChats: chats.filter(chat => {
             const chatDate = new Date(chat.createdAt);
-            return chatDate.getMonth() === new Date().getMonth() && 
-                   chatDate.getFullYear() === new Date().getFullYear();
+            return chatDate.getMonth() === new Date().getMonth() &&
+              chatDate.getFullYear() === new Date().getFullYear();
           }).length
         }
       }
@@ -424,6 +440,85 @@ router.get('/usage', authenticate, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error fetching AI usage'
+    });
+  }
+});
+
+// @route   POST /api/ai/anonymous-chat
+// @desc    Anonymous AI legal chat (no authentication, no storage)
+router.post('/anonymous-chat', [
+  body('message').trim().isLength({ min: 1, max: 2000 }).withMessage('Message must be 1-2000 characters')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation errors',
+        errors: errors.array()
+      });
+    }
+
+    const { message } = req.body;
+
+    // Generate AI response for anonymous user
+    try {
+      const prompt = `${ANONYMOUS_LEGAL_SYSTEM_PROMPT}\n\nUser: ${message}`;
+      console.log('🔒 Anonymous AI request:', prompt.substring(0, 100) + '...');
+
+      const result = await model.generateContent({
+        contents: [{ parts: [{ text: prompt }] }]
+      });
+
+      const aiResponse = result.response.text();
+      console.log('✅ Anonymous AI response received:', aiResponse.substring(0, 100) + '...');
+
+      res.json({
+        success: true,
+        message: 'Response generated successfully',
+        data: {
+          aiResponse: {
+            content: aiResponse,
+            timestamp: new Date().toISOString(),
+            model: process.env.GEMINI_MODEL || 'gemini-2.0-flash-lite',
+            anonymous: true
+          }
+        }
+      });
+    } catch (aiError) {
+      console.error('Anonymous AI generation error:', aiError);
+
+      res.status(500).json({
+        success: false,
+        message: 'AI service temporarily unavailable. Please try again later.',
+        errorType: 'ai_service_error'
+      });
+    }
+  } catch (error) {
+    console.error('Anonymous chat error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      code: error.code
+    });
+
+    // Check if it's a Google AI quota error
+    if (error.message && error.message.includes('quota')) {
+      res.status(429).json({
+        success: false,
+        message: 'AI service temporarily unavailable due to high demand. Please try again later.',
+        errorType: 'quota_exceeded'
+      });
+      return;
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Server error processing anonymous chat request',
+      error: {
+        type: error.name,
+        message: error.message
+      }
     });
   }
 });

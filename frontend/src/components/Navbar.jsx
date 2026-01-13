@@ -134,47 +134,58 @@ const Navbar = () => {
                   </button>
                 </div>
               </>
-            ) : (
-              <>
-                <Link
-                  to="/"
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActivePath('/')
-                    ? 'text-primary-600 bg-primary-50'
-                    : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                    }`}
-                >
-                  <Home className="w-4 h-4" />
-                  <span>Home</span>
-                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/"
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActivePath('/')
+                      ? 'text-primary-600 bg-primary-50'
+                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                      }`}
+                  >
+                    <Home className="w-4 h-4" />
+                    <span>Home</span>
+                  </Link>
 
-                <div className="flex items-center space-x-3 pl-3">
                   <Link
-                    to="/payments"
-                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+                    to="/anonymous-ai-chat"
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActivePath('/anonymous-ai-chat')
+                      ? 'text-green-600 bg-green-50'
+                      : 'text-gray-700 hover:text-green-600 hover:bg-gray-50'
+                      }`}
                   >
-                    Payments
+                    <MessageSquare className="w-4 h-4" />
+                    <span>Anonymous AI</span>
                   </Link>
-                  <Link
-                    to="/esignature"
-                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    E-Signature
-                  </Link>
-                  <Link
-                    to="/estamp"
-                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    E-Stamp
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="btn-gradient text-white px-4 py-2 rounded-md text-sm font-medium"
-                  >
-                    Sign Up
-                  </Link>
-                </div>
-              </>
-            )}
+
+                  <div className="flex items-center space-x-3 pl-3">
+                    <Link
+                      to="/payments"
+                      className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+                    >
+                      Payments
+                    </Link>
+                    <Link
+                      to="/esignature"
+                      className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+                    >
+                      E-Signature
+                    </Link>
+                    <Link
+                      to="/estamp"
+                      className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+                    >
+                      E-Stamp
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="btn-gradient text-white px-4 py-2 rounded-md text-sm font-medium"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                </>
+              )}
           </div>
 
           {/* Mobile menu button */}
@@ -252,6 +263,14 @@ const Navbar = () => {
                   >
                     <Home className="w-5 h-5" />
                     <span>Home</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleNavigation('/anonymous-ai-chat')}
+                    className="w-full flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-green-600 hover:bg-gray-50"
+                  >
+                    <MessageSquare className="w-5 h-5" />
+                    <span>Anonymous AI</span>
                   </button>
 
                   <button
